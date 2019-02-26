@@ -1,0 +1,12 @@
+include "layout.blade"
+
+replace block body
+
+form(method="post" action="/login")
+    input(type="text" name="username")
+        {change}
+            validate(e.currentTarget.value);
+    input(type="password" name="password")
+        {change}
+            checkPasswordStrength(this.value);
+    input(type="submit")
