@@ -1,0 +1,20 @@
+doctype html
+html
+    head
+        link(rel="stylesheet" href="/stylesheets/style.css")
+    body
+        div.wrapMenu
+            header.headerMenu-menu
+                ul.headerMenu
+                    li
+                        a(href="/")
+                            span Home
+                    li
+                        a(href="/download")
+                            span Download
+
+        != messages('messages', locals)
+        if errors
+            each error, i in errors
+                div(class="alert alert-danger") #{error.msg}
+        block content

@@ -1,0 +1,14 @@
+extends layout
+
+block content
+    .errors
+    each error in errors
+        div #{error.msg}
+
+    div.wrap
+        form(method="post" action="/users/register")
+            input(type="text" name="username")
+
+            input(type="password" name="password")
+
+            input(type="submit")

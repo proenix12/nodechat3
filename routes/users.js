@@ -1,18 +1,29 @@
 const express = require('express');
-let Users = require('../models/users');
-let router = express.Router();
-const bodyParser = require("body-parser");
-const flash = require('connect-flash');
+const router = express.Router();
+const Users = require('../models/users');
+const passport = require('passport');
 const bcrypt = require('bcryptjs');
 
 /* GET users listing. */
-router.get('/login', function(req, res, next) {
-  res.render('login', { title:"Login" });
+
+router.get('/login', function(req, res) {
+  res.render('login');
+});
+
+router.post('/login', function(req, res, next){
+  passport.authenticate('local', {
+    successRedirect:'/',
+    failureRedirect:'/users/login',
+    failureFlash: true
+  })(req, res, next);
 });
 
 router.get('/register', function (req, res, next) {
-  res.render('register', { title:"Register", success: false, errors: req.session.errors });
-  req.session.errors = null;
+  let success = req.flash('info');
+  let successMsg;
+
+  if(success){successMsg = success }else{ successMsg = false; }
+  res.render('register', { title:"Register", success:successMsg, errors:false });
 });
 
 router.post('/register', function (req, res, next) {
@@ -25,17 +36,13 @@ router.post('/register', function (req, res, next) {
   let errors = req.validationErrors();
 
   if(errors) {
-    req.session.errors = errors;
-    res.redirect('/users/register');
-    console.log(errors);
+    res.render('register', { errors:errors });
 
   }else{
-    console.log('test2');
     let users = new Users({
         userName : username,
         password : password,
     });
-    console.log(users);
     const saltRounds = 10;
     const myPlaintextPassword = 's0/\/\P4$$w0rD';
     const someOtherPlaintextPassword = 'not_bacon';
@@ -47,11 +54,18 @@ router.post('/register', function (req, res, next) {
         }
         users.password = hash;
         users.save();
+        req.flash('info', 'This is a flash message using the express-flash module.');
         res.redirect('/users/register');
       })
     });
   }
 
+});
+
+router.get('/logout', function(req, res){
+  req.logout();
+  req.flash('success', 'You are logged out');
+  res.redirect('/users/login');
 });
 
 module.exports = router;
