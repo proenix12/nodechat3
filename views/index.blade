@@ -1,8 +1,0 @@
-include "layout.blade"
-
-replace block body
-    h1 #{title}
-    ul
-        foreach users as user
-            li= user.userName
-            li= user.password
