@@ -1,12 +1,16 @@
 include "layout.blade"
 
 replace block body
-
-form(method="post" action="/users/register")
-    input(type="text" name="username")
-        {change}
-            validate(e.currentTarget.value);
-    input(type="password" name="password")
-        {change}
-            checkPasswordStrength(this.value);
-    input(type="submit")
+    #errors
+        - if(errors)
+            p You are done. Do more! >:O
+        - else
+            p Get to work, slave!
+    form(method="post" action="/users/register")
+        input(type="text" name="username")
+            {change}
+                validate(e.currentTarget.value);
+        input(type="password" name="password")
+            {change}
+                checkPasswordStrength(this.value);
+        input(type="submit")
