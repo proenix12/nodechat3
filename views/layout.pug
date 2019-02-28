@@ -2,6 +2,7 @@ doctype html
 html
     head
         link(rel="stylesheet" href="/stylesheets/style.css")
+        script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js")
     body
         div.wrapMenu
             header.headerMenu-menu
@@ -12,9 +13,14 @@ html
                     li
                         a(href="/download")
                             span Download
+                    if login
+                        li
+                            a(href="/users/logout")
+                                span Logout
 
-        != messages('messages', locals)
-        if errors
-            each error, i in errors
-                div(class="alert alert-danger") #{error.msg}
+        div.wrap
+            != messages('messages', locals)
+            if errors
+                each error, i in errors
+                    div(class="alert alert-danger") #{error.msg}
         block content

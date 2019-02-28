@@ -3,9 +3,21 @@ extends layout
 block content
 
     div.wrap
-        form(method="post" action="/users/register")
-            input(type="text" name="username")
+        form(class="loginForm" method="post" action="/users/register")
+            div.formHeader
+                h1 Welcome back!
+                p We're so excited to see you again!
 
-            input(type="password" name="password")
+            label Email
+            input(class="field" type="email" name="useremail")
 
-            input(type="submit")
+            label Username
+            input(class="field" type="text" name="username")
+
+            label Password
+            input(class="field" type="password" name="password")
+            a(class="colorBlue" href="/forgot") Forgot your password ?
+
+            input(class="submit" type="submit")
+            p.needAcc Need an account?
+                a(class="colorBlue" href="/users/register") Register

@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require("body-parser");
-const expressValidator =  require('express-validator');
+const expressValidator = require('express-validator');
 const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
@@ -21,6 +21,7 @@ db.on('error', function (error) {
 });
 
 let app = express();
+
 app.set('view engine', 'pug');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -28,20 +29,24 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'views')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Express Session Middleware
 app.use(session({
-    secret: 'test',
-    resave:true,
-    saveUninitialized: true,
+    secret: 'keyboard',
+    resave: true,
+    saveUninitialized: true
 }));
-app.use(flash());
+
+// Express Messages Middleware
+app.use(require('connect-flash')());
 app.use(function (req, res, next) {
     res.locals.messages = require('express-messages')(req, res);
     next();
 });
+
 //Express validator Middleware
 app.use(expressValidator({
     errorFormatter: function(param, msg, value) {
-        var namespace = param.split('.')
+        let namespace = param.split('.')
             , root    = namespace.shift()
             , formParam = root;
 
@@ -60,22 +65,100 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('*', function (req, res, next) {
-    res.locals.users = req.user || null;
+//Set global for user
+app.use(function (req, res, next) {
+    res.locals.login = req.isAuthenticated();
     next();
 });
 
 let indexRouter = require('./routes/index');
 let usersRouter = require('./routes/users');
+let appChat = require('./routes/app');
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/', appChat);
 
 let server = app.listen(3000, '0.0.0.0', function () {
     var host = server.address().address;
     var port = server.address().port;
 
     console.log('Server run on http://%s:%s/', host, port);
+});
+
+let io = require('socket.io')(server, {});
+//listen on every connection
+io.on('connection', function(socket){
+    socket.username = '';
+    socket.id = '';
+
+    name = Math.random();
+    id = Math.random();
+    var pack = {
+        id: id,
+        name:name
+    };
+    var total= io.engine.clientsCount;
+
+    socket.on('new user', function (data, callback) {
+        socket.room = 'Lobby';
+        socket.join('Lobby');
+        socket.emit('updatechat', 'SERVER', 'you have connected to Lobby');
+        socket.broadcast.to('Lobby').emit('updatechat', 'SERVER', data + ' has connected to this room');
+        socket.emit('updaterooms', rooms, 'Lobby');
+
+        if(usernames.indexOf(data) != -1){
+            callback(false);
+        }else{
+            callback(true);
+            socket.username = data;
+
+            usernames.push(socket.username);
+            updateUsernames();
+        }
+    });
+
+    socket.on('create', function(room) {
+        rooms.push(room);
+        socket.emit('updaterooms', rooms, socket.room);
+    });
+
+    socket.on('switchRoom', function(newroom) {
+        var oldroom;
+        oldroom = socket.room;
+        socket.leave(socket.room);
+        socket.join(newroom);
+        socket.emit('updatechat', 'SERVER', 'you have connected to ' + newroom);
+        socket.broadcast.to(oldroom).emit('updatechat', 'SERVER', socket.username + ' has left this room');
+        socket.room = newroom;
+        socket.broadcast.to(newroom).emit('updatechat', 'SERVER', socket.username + ' has joined this room');
+        socket.emit('updaterooms', rooms, newroom);
+    });
+
+    function updateUsernames(){
+        io.sockets.emit('usernames', usernames);
+    }
+
+    socket.on('new_message', (data) => {
+        //io.sockets.emit('new_message', {message: data.message, username: socket.username});
+        io.sockets["in"](socket.room).emit('new_message', {message: data.message, username: socket.username});
+    });
+
+    socket.on('typing', (data) => {
+        //socket.broadcast.emit('typing', {username:socket.username, typing:data});
+        socket.broadcast.to(socket.room).emit('typing', { username:socket.username, typing:data });
+    });
+
+    //Disconnect
+    socket.on('disconnect', function(data){
+        if(!socket.username){
+            return;
+        }
+
+        usernames.splice(usernames.indexOf(socket.username), 1);
+        updateUsernames();
+        socket.leave(socket.room);
+    })
 });
 
 module.exports = app;

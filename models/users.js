@@ -9,6 +9,13 @@ let userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        unique: true,
+        required: true
+    }
 });
 
 let Users = module.exports = mongoose.model('Users', userSchema);

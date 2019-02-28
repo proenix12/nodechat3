@@ -1,0 +1,36 @@
+doctype html
+html
+    head
+        link(rel="stylesheet" href="/stylesheets/style.css")
+        script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js")
+        script(src='/socket.io/socket.io.js')
+        script(src="/javascripts/socket.js")
+    body
+        div= title
+
+        div(class="groups-container")
+            div
+                h2(class="rooms") ROOMS
+                div(id="rooms")
+
+            div
+                div(id="room creation")
+                    button(class="create-room-btn" onclick="document.getElementById('id01').style.display='block'" style="width:auto;") Create Room
+
+        div
+            div(id="room creation")
+
+        div(class="chat-container")
+            div(id="chatroom")
+                div(id="feedback")
+
+            form(id="textarea" action="" method="POST")
+                div
+                    textarea(name="text_editor" id="text")
+
+                div
+                    button( class="signupbtn" type="submit") Send
+
+
+        div(tyle="display: none;" class="user-container")
+            div(id="users")
