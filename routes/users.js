@@ -3,6 +3,7 @@ const router = express.Router();
 const Users = require('../models/users');
 const passport = require('passport');
 const bcrypt = require('bcryptjs');
+const flash = require('connect-flash');
 
 /* GET users listing. */
 
@@ -39,24 +40,33 @@ router.post('/register', function (req, res, next) {
     res.render('register', { errors:errors });
 
   }else{
-    let users = new Users({
-        userName : username,
-        password : password,
-    });
-    const saltRounds = 10;
-    const myPlaintextPassword = password;
+    let query = {userName:username};
+    Users.findOne(query, function(err, user){
+      if(err) throw err;
+      if(user){
+        req.flash('error', 'user is taken');
+      }else{
+        let users = new Users({
+          userName : username,
+          password : password,
+        });
+        const saltRounds = 10;
+        const myPlaintextPassword = password;
 
-    bcrypt.genSalt(saltRounds, function(err, salt) {
-      bcrypt.hash(myPlaintextPassword, salt, function(err, hash) {
-        if(err){
-          console.log(err);
-        }
-        users.password = hash;
-        users.save();
-        req.flash('info', 'This is a flash message using the express-flash module.');
-        res.redirect('/users/register');
-      })
+        console.log('new user');
+        bcrypt.genSalt(saltRounds, function(err, salt) {
+          bcrypt.hash(myPlaintextPassword, salt, function(err, hash) {
+            if(err){
+              console.log(err);
+            }
+            users.password = hash;
+            users.save();
+            req.flash('info', 'This is a flash message using the express-flash module.');
+          })
+        });
+      }
     });
+    res.redirect('/users/register');
   }
 
 });
