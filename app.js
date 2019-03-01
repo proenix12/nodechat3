@@ -7,8 +7,10 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
 const config = require('./config/database');
+const util = require('util');
 
-mongoose.connect(config.database,{ useCreateIndex: true,useNewUrlParser: true });
+
+mongoose.connect(config.database, {useCreateIndex: true, useNewUrlParser: true});
 let db = mongoose.connection;
 
 //Check connection
@@ -23,7 +25,7 @@ db.on('error', function (error) {
 let app = express();
 
 app.set('view engine', 'pug');
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, 'views')));
@@ -45,18 +47,18 @@ app.use(function (req, res, next) {
 
 //Express validator Middleware
 app.use(expressValidator({
-    errorFormatter: function(param, msg, value) {
+    errorFormatter: function (param, msg, value) {
         let namespace = param.split('.')
-            , root    = namespace.shift()
+            , root = namespace.shift()
             , formParam = root;
 
-        while(namespace.length) {
+        while (namespace.length) {
             formParam += '[' + namespace.shift() + ']';
         }
         return {
-            param : formParam,
-            msg   : msg,
-            value : value
+            param: formParam,
+            msg: msg,
+            value: value
         };
     }
 }));
@@ -86,44 +88,35 @@ let server = app.listen(3000, '0.0.0.0', function () {
     console.log('Server run on http://%s:%s/', host, port);
 });
 
+let usernames = [];
+let rooms = ['Lobby'];
+let test;
+
 let io = require('socket.io')(server, {});
 //listen on every connection
-io.on('connection', function(socket){
-    socket.username = '';
-    socket.id = '';
+io.on('connection', function (socket) {
 
-    name = Math.random();
-    id = Math.random();
-    var pack = {
-        id: id,
-        name:name
-    };
-    var total= io.engine.clientsCount;
-
-    socket.on('new user', function (data, callback) {
+    socket.on('user_data', function (data) {
         socket.room = 'Lobby';
         socket.join('Lobby');
         socket.emit('updatechat', 'SERVER', 'you have connected to Lobby');
         socket.broadcast.to('Lobby').emit('updatechat', 'SERVER', data + ' has connected to this room');
         socket.emit('updaterooms', rooms, 'Lobby');
 
-        if(usernames.indexOf(data) != -1){
-            callback(false);
-        }else{
-            callback(true);
-            socket.username = data;
+        socket.id = data.id;
+        socket.username = data.name;
+        test = socket.username = data.name;
 
-            usernames.push(socket.username);
-            updateUsernames();
-        }
+        usernames.push(socket.username);
+        updateUsernames();
     });
 
-    socket.on('create', function(room) {
+    socket.on('create', function (room) {
         rooms.push(room);
         socket.emit('updaterooms', rooms, socket.room);
     });
 
-    socket.on('switchRoom', function(newroom) {
+    socket.on('switchRoom', function (newroom) {
         var oldroom;
         oldroom = socket.room;
         socket.leave(socket.room);
@@ -140,18 +133,21 @@ io.on('connection', function(socket){
     }
 
     socket.on('new_message', (data) => {
+        for(let i in usernames){
+            io.sockets["in"](socket.room).emit('new_message', {message: data.message, username: usernames[i]});
+        }
         //io.sockets.emit('new_message', {message: data.message, username: socket.username});
-        io.sockets["in"](socket.room).emit('new_message', {message: data.message, username: socket.username});
+        //io.sockets["in"](socket.room).emit('new_message', {message: data.message, username: socket.username});
     });
 
     socket.on('typing', (data) => {
         //socket.broadcast.emit('typing', {username:socket.username, typing:data});
-        socket.broadcast.to(socket.room).emit('typing', { username:socket.username, typing:data });
+        socket.broadcast.to(socket.room).emit('typing', {username: socket.username, typing: data});
     });
 
     //Disconnect
-    socket.on('disconnect', function(data){
-        if(!socket.username){
+    socket.on('disconnect', function (data) {
+        if (!socket.username) {
             return;
         }
 

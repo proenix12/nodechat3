@@ -4,9 +4,20 @@ html
         link(rel="stylesheet" href="/stylesheets/style.css")
         script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js")
         script(src='/socket.io/socket.io.js')
-        script(src="/javascripts/socket.js")
+        script(src='/javascripts/socket.js')
     body
-        div= title
+        script.
+            socket = io();
+
+            function switchRoom(room){
+                socket.emit('switchRoom', room);
+            }
+
+        script.
+          loginId="#{data.id}";
+          loginName="#{data.name}";
+
+          socket.emit('user_data', {id:loginId, name:loginName} );
 
         div(class="groups-container")
             div
@@ -16,6 +27,24 @@ html
             div
                 div(id="room creation")
                     button(class="create-room-btn" onclick="document.getElementById('id01').style.display='block'" style="width:auto;") Create Room
+
+                        div(id="id01" class="modal")
+                            span(onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal") &times;
+                            form(class="modal-content" action="")
+                                div(class="container")
+                                    h1 Sign Up
+                                    p Please fill in this form to create an account.
+                                    hr
+                                    label(for="email")
+                                        p(class="roomField") Room Name
+                                    input(id="roomname" class="textField" type="text" placeholder="Enter Room Name" name="room-name")
+
+                                    p By creating an account you agree to our
+                                        a(href="#" style="color:dodgerblue") Terms & Privacy
+
+                                    div(class="clearfix")
+                                        button(type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn") Cancel
+                                        button(id="roombutton" type="submit" class="signupbtn") Sign Up
 
         div
             div(id="room creation")

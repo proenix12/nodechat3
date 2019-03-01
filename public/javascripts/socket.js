@@ -1,13 +1,6 @@
 $(function () {
     let socket = io();
 
-    // socket.emit('chat message', u);
-
-
-    function switchRoom(room){
-        socket.emit('switchRoom', room);
-    }
-
     let chatroom = $('#chatroom');
     let feedback = $('#feedback');
     let timeout;
@@ -67,7 +60,9 @@ $(function () {
     });
 
     //Show new message
-    socket.on('new_message', (data) => {
+    socket.on('new_message1', (data) => {
+        console.log('message to client');
+
         chatroom.append("<p class='message'>" + data.username + ": " + data.message + "</p>");
         var objDiv = document.getElementById("chatroom");
         objDiv.scrollTop = objDiv.scrollHeight;
