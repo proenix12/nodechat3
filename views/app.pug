@@ -5,11 +5,11 @@ html
         script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js")
         script(src='/socket.io/socket.io.js')
         script(src='/javascripts/socket.js')
-    body
         script.
-            socket = io();
+            socket = io.connect('http://localhost:80');
 
             function switchRoom(room){
+                console.log(room);
                 socket.emit('switchRoom', room);
             }
 
@@ -17,7 +17,13 @@ html
           loginId="#{data.id}";
           loginName="#{data.name}";
 
-          socket.emit('user_data', {id:loginId, name:loginName} );
+          $(document).ready(function(){
+              console.log('test login')
+                socket.emit('user_data', {id:loginId, name:loginName} );
+          });
+
+
+    body
 
         div(class="groups-container")
             div

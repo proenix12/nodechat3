@@ -1,5 +1,11 @@
 $(function () {
+    
     let socket = io();
+
+    function switchRoom(room){
+        console.log('socket.js');
+        socket.emit('switchRoom', room);
+    }
 
     let chatroom = $('#chatroom');
     let feedback = $('#feedback');
@@ -18,6 +24,23 @@ $(function () {
     //
     //     $('#chatroom').css("height",x);
     // }).trigger("resize");
+
+    socket.on('updatechat', function (username, data) {
+        console.log('username: ' + username, 'data: ' + data);
+        chatroom.append("<p id='test' class='message'>" + username + ": " + data + "</p>");
+	});
+
+    socket.on('updaterooms', function(rooms, current_room) {
+		$('#rooms').empty();
+		$.each(rooms, function(key, value) {
+			if(value == current_room){
+				$('#rooms').append('<div>' + value + '</div>');
+			}
+			else {
+				$('#rooms').append('<div><a href="#" onclick="switchRoom(\''+value+'\')">' + value + '</a></div>');
+			}
+		});
+	});
 
 
     userForm.submit( (e) =>  {
@@ -40,6 +63,7 @@ $(function () {
 
     //Connect member
     socket.on('usernames', function (data) {
+        console.log(data);
         var html = '';
 
         for(let i = 0; i < data.length; i++){
@@ -60,10 +84,10 @@ $(function () {
     });
 
     //Show new message
-    socket.on('new_message1', (data) => {
-        console.log('message to client');
+    socket.on('new_message', (username, data) => {
+        console.log(username, data);
 
-        chatroom.append("<p class='message'>" + data.username + ": " + data.message + "</p>");
+        chatroom.append("<p id='test' class='message'>" + username + ": " + data + "</p>");
         var objDiv = document.getElementById("chatroom");
         objDiv.scrollTop = objDiv.scrollHeight;
         var audio = new Audio('/sounds/relentless.mp3');
